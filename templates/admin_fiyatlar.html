@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fiyat Yönetimi - Prefabrik Hesaplayıcı</title>
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .container { max-width: 1200px; margin: auto; padding: 20px; }
+        .form-section { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .input-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn-submit { background-color: #007BFF; color: white; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 1.1em; }
+        .alert { padding: 10px; border-radius: 4px; margin-bottom: 10px; }
+        .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <nav class="bg-gray-800 p-4 text-white">
+        <div class="container flex justify-between items-center">
+            <a href="/" class="text-xl font-bold">Prefabrik Hesaplayıcı</a>
+            <div>
+                <a href="/admin/fiyatlar" class="hover:text-gray-300">Fiyat Yönetimi</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Malzeme Fiyat Yönetimi</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.type }}">
+                    {{ message.message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form action="/admin/fiyatlar" method="post" class="form-section">
+            <div class="overflow-x-auto mb-6">
+                <table class="min-w-full bg-white border-collapse">
+                    <thead>
+                        <tr class="bg-gray-200 text-gray-700">
+                            <th class="py-2 px-4 border text-left">Malzeme Adı</th>
+                            <th class="py-2 px-4 border text-left">Birim Ölçü</th>
+                            <th class="py-2 px-4 border text-left">Mevcut Fiyat (TL)</th>
+                            <th class="py-2 px-4 border text-left">Geçerlilik Tarihi</th>
+                            <th class="py-2 px-4 border text-left">Yeni Fiyat (TL)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for malzeme in malzemeler %}
+                            <tr class="border-t">
+                                <td class="py-2 px-4 border">{{ malzeme.malzeme_adi }}</td>
+                                <td class="py-2 px-4 border">{{ malzeme.birim_olcu_tipi }}</td>
+                                <td class="py-2 px-4 border">{{ "%.2f"|format(malzeme.birim_fiyat) if malzeme.birim_fiyat else 'N/A' }}</td>
+                                <td class="py-2 px-4 border">{{ malzeme.gecerlilik_tarihi if malzeme.gecerlilik_tarihi else 'N/A' }}</td>
+                                <td class="py-2 px-4 border">
+                                    <input type="number" name="birim_fiyat_{{ malzeme.malzeme_id }}" 
+                                           value="{{ "%.2f"|format(malzeme.birim_fiyat) if malzeme.birim_fiyat else '' }}" 
+                                           step="0.01" min="0" class="mt-1 block w-full rounded-md shadow-sm border-gray-300" required>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn-submit">Fiyatları Güncelle</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

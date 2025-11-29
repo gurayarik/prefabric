@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prefabrik Ev Maliyet Hesaplayıcı</title>
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .container { max-width: 1200px; margin: auto; padding: 20px; }
+        .form-section { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .input-group input, .input-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn-add { background-color: #4CAF50; color: white; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-remove { background-color: #f44336; color: white; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-submit { background-color: #007BFF; color: white; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 1.1em; }
+        .alert { padding: 10px; border-radius: 4px; margin-bottom: 10px; }
+        .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <nav class="bg-gray-800 p-4 text-white">
+        <div class="container flex justify-between items-center">
+            <a href="/" class="text-xl font-bold">Prefabrik Hesaplayıcı</a>
+            <div>
+                <a href="/admin/fiyatlar" class="hover:text-gray-300">Fiyat Yönetimi</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Prefabrik Ev Maliyet Hesaplayıcı</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.type }}">
+                    {{ message.message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <form action="/" method="post" class="form-section">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Genel Ev Bilgileri</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="input-group">
+                    <label for="ev_tipi" class="text-gray-700">Ev Tipi</label>
+                    <select name="ev_tipi" id="ev_tipi" class="mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
+                        <option value="Tek Katlı">Tek Katlı</option>
+                        <option value="Çift Katlı">Çift Katlı</option>
+                        <option value="Villa">Villa</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="kat_sayisi" class="text-gray-700">Kat Sayısı</label>
+                    <input type="number" name="kat_sayisi" id="kat_sayisi" value="1" min="1" class="mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
+                </div>
+                <div class="input-group">
+                    <label for="cati_tipi" class="text-gray-700">Çatı Tipi</label>
+                    <select name="cati_tipi" id="cati_tipi" class="mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
+                        <option value="Düz">Düz</option>
+                        <option value="Eğimli (Kırma)">Eğimli (Kırma)</option>
+                        <option value="Beşik">Beşik</option>
+                    </select>
+                </div>
+                <div class="input-group" id="cati_egim_group" style="display: none;">
+                    <label for="cati_egim_acisi" class="text-gray-700">Çatı Eğim Açısı (°)</label>
+                    <input type="number" name="cati_egim_acisi" id="cati_egim_acisi" value="0" min="0" max="90" step="0.1" class="mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+            </div>
+
+            <hr class="my-6 border-gray-300">
+
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Oda Bilgileri</h2>
+            <div id="oda-listesi" class="mb-6">
+                <!-- Oda girişleri buraya eklenecek -->
+            </div>
+            <button type="button" id="oda-ekle" class="btn-add">Oda Ekle</button>
+
+            <hr class="my-6 border-gray-300">
+
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Pencere Bilgileri</h2>
+            <div id="pencere-listesi" class="mb-6">
+                <!-- Pencere girişleri buraya eklenecek -->
+            </div>
+            <button type="button" id="pencere-ekle" class="btn-add">Pencere Ekle</button>
+
+            <hr class="my-6 border-gray-300">
+
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Kapı Bilgileri</h2>
+            <div id="kapi-listesi" class="mb-6">
+                <!-- Kapı girişleri buraya eklenecek -->
+            </div>
+            <button type="button" id="kapi-ekle" class="btn-add">Kapı Ekle</button>
+
+            <hr class="my-6 border-gray-300">
+
+            <div class="text-center">
+                <button type="submit" class="btn-submit">Maliyet Hesapla</button>
+            </div>
+        </form>
+
+        {% if malzeme_ihtiyaclari %}
+            <div class="form-section mt-8">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-700">Hesaplama Sonuçları</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border-collapse">
+                        <thead>
+                            <tr class="bg-gray-200 text-gray-700">
+                                <th class="py-2 px-4 border">Malzeme / İş Kalemi</th>
+                                <th class="py-2 px-4 border">Net Miktar</th>
+                                <th class="py-2 px-4 border">Gerekli Miktar (Fire Dahil)</th>
+                                <th class="py-2 px-4 border">Birim Ölçü</th>
+                                <th class="py-2 px-4 border">Birim Fiyat (TL)</th>
+                                <th class="py-2 px-4 border">Maliyet (TL)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, item in malzeme_ihtiyaclari.items() %}
+                                <tr class="border-t">
+                                    <td class="py-2 px-4 border">{{ key }}</td>
+                                    <td class="py-2 px-4 border">{{ "%.2f"|format(item.net_miktar) if item.net_miktar != "N/A" else "N/A" }}</td>
+                                    <td class="py-2 px-4 border">{{ "%.2f"|format(item.gerekli_miktar) if item.gerekli_miktar != "N/A" else "N/A" }}</td>
+                                    <td class="py-2 px-4 border">{{ item.birim_olcu }}</td>
+                                    <td class="py-2 px-4 border">{{ "%.2f"|format(item.birim_fiyat) }}</td>
+                                    <td class="py-2 px-4 border">{{ "%.2f"|format(item.maliyet) }}</td>
+                                </tr>
+                            {% endfor %}
+                            <tr class="border-t bg-gray-100 font-bold">
+                                <td colspan="5" class="py-2 px-4 border text-right">Toplam Proje Maliyeti:</td>
+                                <td class="py-2 px-4 border">{{ "%.2f"|format(toplam_maliyet) }} TL</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const odaListesi = document.getElementById('oda-listesi');
+            const pencereListesi = document.getElementById('pencere-listesi');
+            const kapiListesi = document.getElementById('kapi-listesi');
+            const odaEkleBtn = document.getElementById('oda-ekle');
+            const pencereEkleBtn = document.getElementById('pencere-ekle');
+            const kapiEkleBtn = document.getElementById('kapi-ekle');
+            const catiTipiSelect = document.getElementById('cati_tipi');
+            const catiEgimGroup = document.getElementById('cati_egim_group');
+
+            // Oda Kaplama Tiplerini JavaScript'e aktar
+            const odaKaplamaTipleri = JSON.parse('{{ oda_kaplama_tipleri | tojson }}');
+
+            function createSelectOptions(selectElement, optionsArray) {
+                optionsArray.forEach(optionText => {
+                    const option = document.createElement('option');
+                    option.value = optionText;
+                    option.textContent = optionText;
+                    selectElement.appendChild(option);
+                });
+            }
+
+            function addOdaInput() {
+                const div = document.createElement('div');
+                div.className = 'grid grid-cols-1 md:grid-cols-7 gap-4 mb-4 items-end oda-input-group';
+                div.innerHTML = `
+                    <div class="input-group col-span-1">
+                        <label class="text-gray-700">Oda Adı</label>
+                        <input type="text" name="oda_adi[]" placeholder="Örn: Salon" class="mt-1 block w-full rounded-md shadow-sm border-gray-300" required>
+                    </div>
+                    <div class="input-group col-span-1">
+                        <label class="text-gray-700">Uzunluk (m)</label>
+                        <input type="number" name="oda_uzunluk[]" step="0.01" min="0" value="3.00" class="mt-1 block w-full rounded-md shadow-sm border-gray-300" required>
+                    </div>
+                    <div class="input-group col-span-1">
+                        <label class="text-gray-700">Genişlik (m)</label>
+                        <input type="number" name="oda_genislik[]" step="0.01" min="0" value="4.00" class="mt-1 block w-full rounded-md shadow-sm border-gray-300" required>
+                    </div>
+                    <div class="input-group col-span-1">
+                        <label class="text-gray-700">Yükseklik (m)</label>
+                        <input type="number" name="oda_yukseklik[]" step="0.01" min="0" value="2.80" class="mt-1 block w-full rounded-md shadow-sm border-gray-300" required>
+                    </div>
+                    <div class="input-group col-span-1">
+                        <label class="text-gray-700">Zemin Kaplama</label>
+                        <select name="oda_zemin_kaplama[]" class="mt-1 block w-full rounded-md shadow-sm border-gray-300" required></select>
+                    </div>
+                    <div class="input-group col-span-1">
+                        <label class="text-gray-700">Duvar Kaplama</label>
+                        <select name="oda_duvar_kaplama[]" class="mt-1 block w-full rounded-md shadow-sm border-gray-300" required></select>
+                    </div>
+                    <button type="button" class="btn-remove h-10 col-span-1">Kaldır</button>
+                `;
+                const zeminSelect = div.querySelector('select[name="oda_zemin_kaplama[]"]');
+                const duvarSelect = div.querySelector('select[name="oda_duvar_kaplama[]"]');
+                createSelectOptions(zeminSelect, odaKaplamaTipleri);
+                createSelectOptions(duvarSelect, odaKaplamaTipleri);
+                odaListesi.appendChild(div);
+                div.querySelector('.btn-remove').addEventListener('click', function() {
+                    div.remove();
+                });
+            }
+
+            function addPencereInput() {
+                const div = document.createElement('div');
+                div.className = 'grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end pencere-input-group';
+                div.innerHTML = `
+                    <div class="input-group col-span-1">
+                        <label class="text-gray-700">Genişlik (m)</label>
+                        <input type="number" name="pencere_genislik[]" step="0.01" min="0" value="1.20" class="mt-1 block w-full rounded-md shadow-sm border-gray-300" required>
+                    </div>
+                    <div class="input-group col-span-1">
+                        <label class="text-gray-700">Yükseklik (m)</label>
+                        <input type="number" name="pencere_yukseklik[]" step="0.01" min="0" value="1.00" class="mt-1 block w-full rounded-md shadow-sm border-gray-300" required>
+                    </div>
+                    <div class="input-group col-span-1">
+                        <label class="text-gray-700">Adet</label>
+                        <input type="number" name="pencere_adet[]" min="1" value="1" class="mt-1 block w-full rounded-md shadow-sm border-gray-300" required>
+                    </div>
+                    <button type="button" class="btn-remove h-10 col-span-1">Kaldır</button>
+                `;
+                pencereListesi.appendChild(div);
+                div.querySelector('.btn-remove').addEventListener('click', function() {
+                    div.remove();
+                });
+            }
+
+            function addKapiInput() {
+                const div = document.createElement('div');
+                div.className = 'grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 items-end kapi-input-group';
+                div.innerHTML = `
+                    <div class="input-group col-span-1">
+                        <label class="text-gray-700">Kapı Adı</label>
+                        <input type="text" name="kapi_adi[]" placeholder="Örn: Salon Kapısı" class="mt-1 block w-full rounded-md shadow-sm border-gray-300" required>
+                    </div>
+                    <div class="input-group col-span-1">
+                        <label class="text-gray-700">Genişlik (m)</label>
+                        <input type="number" name="kapi_genislik[]" step="0.01" min="0" value="0.90" class="mt-1 block w-full rounded-md shadow-sm border-gray-300" required>
+                    </div>
+                    <div class="input-group col-span-1">
+                        <label class="text-gray-700">Yükseklik (m)</label>
+                        <input type="number" name="kapi_yukseklik[]" step="0.01" min="0" value="2.00" class="mt-1 block w-full rounded-md shadow-sm border-gray-300" required>
+                    </div>
+                    <div class="input-group col-span-1">
+                        <label class="text-gray-700">Adet</label>
+                        <input type="number" name="kapi_adet[]" min="1" value="1" class="mt-1 block w-full rounded-md shadow-sm border-gray-300" required>
+                    </div>
+                    <button type="button" class="btn-remove h-10 col-span-1">Kaldır</button>
+                `;
+                kapiListesi.appendChild(div);
+                div.querySelector('.btn-remove').addEventListener('click', function() {
+                    div.remove();
+                });
+            }
+
+            // İlk oda, pencere ve kapı inputlarını ekle
+            addOdaInput();
+            addPencereInput();
+            addKapiInput();
+
+            odaEkleBtn.addEventListener('click', addOdaInput);
+            pencereEkleBtn.addEventListener('click', addPencereInput);
+            kapiEkleBtn.addEventListener('click', addKapiInput);
+
+            // Çatı tipi değiştikçe eğim açısı alanını göster/gizle
+            catiTipiSelect.addEventListener('change', function() {
+                if (this.value === 'Düz') {
+                    catiEgimGroup.style.display = 'none';
+                    document.getElementById('cati_egim_acisi').value = 0;
+                } else {
+                    catiEgimGroup.style.display = 'block';
+                }
+            });
+            // Sayfa yüklendiğinde başlangıç durumunu kontrol et
+            catiTipiSelect.dispatchEvent(new Event('change'));
+        });
+    </script>
+</body>
+</html>
