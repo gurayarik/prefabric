@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import json
 import math
@@ -11,14 +12,16 @@ from typing import List, Dict, Optional
 # Bu kısım Flask'tan bağımsız olduğu için büyük ölçüde aynı kalabilir.
 # Ancak, veritabanı bağlantılarının yönetimi FastAPI context'ine daha uygun hale getirilebilir.
 class VeritabaniYoneticisi:
-    def __init__(self, db_adı="malzeme_veritabani.db"):
-        self.db_adı = db_adı
+    def __init__(self, db_adi=None): # Varsayılan değeri None yapıyoruz
+        # Ortam değişkeninden DB_PATH'i okumaya çalış, yoksa varsayılan bir değer kullan
+        # Örn: /app/data/malzeme_veritabani.db (bu dizini Portainer'da bağlayacağız)
+        self.db_adi = db_adi if db_adi else os.getenv("DB_PATH", "/app/data/malzeme_veritabani.db")
         self.conn = None
 
     def baglan(self):
         try:
             if self.conn is None or not self._is_connection_active():
-                self.conn = sqlite3.connect(self.db_adı)
+                self.conn = sqlite3.connect(self.db_adi)
                 self.conn.row_factory = sqlite3.Row
             return self.conn
         except sqlite3.Error as e:
